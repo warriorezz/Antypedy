@@ -1,44 +1,50 @@
-Citizen.CreateThread(
-	function()
-		while true do
-			Citizen.Wait(0)
+local gowno=500.0
 
-			local playerPed = GetPlayerPed(-1)
-			local playerId = PlayerId()
+Citizen.CreateThread(function()
+    for i = 1, 12 do
+        EnableDispatchService(i, false)
+    end
+    
+    SetPedPopulationBudget(0)
+    SetVehiclePopulationBudget(0)
+    
+    local playerPed = PlayerPedId()
+    SetPoliceIgnorePlayer(playerPed, true)
+    SetDispatchCopsForPlayer(playerPed, false)
+end)
 
-			--[[ DISABLE VEHICLE GENERATORS IN PLAYER AREA ]]
-			local pos = GetEntityCoords(playerPed)
-			RemoveVehiclesFromGeneratorsInArea(
-				pos['x'] - 500.0,
-				pos['y'] - 500.0,
-				pos['z'] - 500.0,
-				pos['x'] + 500.0,
-				pos['y'] + 500.0,
-				pos['z'] + 500.0
-			)
+Citizen.CreateThread(function()
+    while true do
+        SetPedDensityMultiplierThisFrame(0)
+        SetScenarioPedDensityMultiplierThisFrame(0, 0)
+        SetVehicleDensityMultiplierThisFrame(0)
+        SetRandomVehicleDensityMultiplierThisFrame(0)
+        SetParkedVehicleDensityMultiplierThisFrame(0)
+        
+        Citizen.Wait(0)
+    end
+end)
 
-			--[[ POLICE DISPATCH SPAWNS OFF ]]
-			for i = 1, 12 do
-				EnableDispatchService(i, false)
-			end
-			SetPlayerWantedLevel(playerId, 0, false)
-			SetPlayerWantedLevelNow(playerId, false)
-			SetPlayerWantedLevelNoDrop(playerId, 0, false)
+Citizen.CreateThread(function()
+    while true do
+        local playerPed = PlayerPedId()
+        local playerId = PlayerId()
+        local pos = GetEntityCoords(playerPed)
 
-			--[[ PED POPULATION OFF ]]
-			SetPedPopulationBudget(0)
-			SetPedDensityMultiplierThisFrame(0)
-			SetScenarioPedDensityMultiplierThisFrame(0, 0)
+        RemoveVehiclesFromGeneratorsInArea(
+            pos.x - gowno,
+            pos.y - gowno,
+            pos.z - gowno,
+            pos.x + gowno,
+            pos.y + gowno,
+            pos.z + gowno
+        )
 
-			--[[ VEHICLE POPULATION OFF ]]
-			SetPedPopulationBudget(0)
-			SetVehicleDensityMultiplierThisFrame(0)
-			SetRandomVehicleDensityMultiplierThisFrame(0)
-			SetParkedVehicleDensityMultiplierThisFrame(0)
+        if GetPlayerWantedLevel(playerId) > 0 then
+            SetPlayerWantedLevel(playerId, 0, false)
+            SetPlayerWantedLevelNow(playerId, false)
+        end
 
-			--[[ POLICE IGNORE PLAYER ]]
-			SetPoliceIgnorePlayer(playerPed, true)
-			SetDispatchCopsForPlayer(playerPed, false)
-		end
-	end
-)
+        Citizen.Wait(500)
+    end
+end)
